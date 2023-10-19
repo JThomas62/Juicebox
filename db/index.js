@@ -18,7 +18,7 @@ async function createUser({
     const { rows: [user] } = await client.query(`
       INSERT INTO users(username, password, name) 
       VALUES($1, $2, $3) 
-      RETURNING *;  -- Remove "ON CONFLICT (username) DO NOTHING"
+      RETURNING *;
     `, [username, password, name]);
 
     return user;
