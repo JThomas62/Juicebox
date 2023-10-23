@@ -1,12 +1,12 @@
-const requireUser = (req, res, next) => {
-  if (req.isAuthenticated()) {
-    req.user = req.user;
-    return next();
+function requireUser(req, res, next) {
+  if (req.user) {
+    req.currentUser = req.user;
+    next();
   } else {
-    return res.status(401).json({ message: "Unauthorized" });
+    res.status(401).json({ error: 'Unauthorized' });
   }
-};
+}
 
 module.exports = {
-  requireUser,
+  requireUser
 };

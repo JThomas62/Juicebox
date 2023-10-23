@@ -47,8 +47,8 @@ postsRouter.post('/', requireUser, async (req, res, next) => {
     postData.title = title;
     postData.content = content;
 
-    if (tags && Array.isArray(tags)) {
-      postData.tags = tags;
+    if (tags) {
+      postData.tags = tags.trim().split(/\s+/);
     }
 
     const post = await createPost(postData);
@@ -59,12 +59,13 @@ postsRouter.post('/', requireUser, async (req, res, next) => {
       next({
         name: 'PostCreationError',
         message: 'There was an error creating your post. Please try again.'
-      });
+      })
     }
   } catch ({ name, message }) {
     next({ name, message });
   }
 });
+
 
 postsRouter.patch('/:postId', requireUser, async (req, res, next) => {
   const { postId } = req.params;
@@ -72,7 +73,7 @@ postsRouter.patch('/:postId', requireUser, async (req, res, next) => {
 
   const updateFields = {};
 
-  if (tags && tags.length > 0) {
+  if (tags) {
     updateFields.tags = tags.trim().split(/\s+/);
   }
 
@@ -101,31 +102,35 @@ postsRouter.patch('/:postId', requireUser, async (req, res, next) => {
   }
 });
 
+
 postsRouter.delete('/:postId', requireUser, async (req, res, next) => {
   const { postId } = req.params;
 
   try {
     const post = await getPostById(postId);
 
-    if (post) {
-      if (post.author.id === req.user.id) {
-        await deletePost(postId);
-        res.send({ message: 'Post deleted successfully' });
-      } else {
-        next({
-          name: 'UnauthorizedUserError',
-          message: 'You cannot delete a post that is not yours'
-        });
-      }
-    } else {
+    if (!post) {
       next({
         name: 'PostNotFoundError',
-        message: 'The requested post does not exist'
+        message: 'Post not found'
+      });
+      return;
+    }
+
+    if (post.author.id === req.user.id) {
+      await deletePost(postId);
+
+      res.send({ message: 'Post deleted successfully' });
+    } else {
+      next({
+        name: 'UnauthorizedUserError',
+        message: 'You cannot delete a post that is not yours'
       });
     }
   } catch ({ name, message }) {
     next({ name, message });
   }
 });
+
 
 module.exports = postsRouter;

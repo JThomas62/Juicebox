@@ -13,19 +13,22 @@ async function createUser({
   username, 
   password,
   name,
+  location
 }) {
   try {
     const { rows: [user] } = await client.query(`
-      INSERT INTO users(username, password, name) 
-      VALUES($1, $2, $3) 
+      INSERT INTO users(username, password, name, location) 
+      VALUES($1, $2, $3, $4) 
+      ON CONFLICT (username) DO NOTHING 
       RETURNING *;
-    `, [username, password, name]);
+    `, [username, password, name, location]);
 
     return user;
   } catch (error) {
     throw error;
   }
 }
+
 
 
 async function updateUser(id, fields = {}) {
@@ -97,15 +100,9 @@ async function getUserByUsername(username) {
       WHERE username=$1
     `, [ username ]);
 
-    if (!user) {
-      throw {
-        name: "UserNotFoundError",
-        message: "A user with that username does not exist"
-      }
-    }
-
     return user;
-  } catch (error) {
+    }
+   catch (error) {
     throw error;
   }
 }
